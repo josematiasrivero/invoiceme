@@ -1,0 +1,164 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { createEntity, updateEntity } from '@/actions/entities';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { EntityColorPicker } from './entity-color-picker';
+import type { Entity, EntityType } from '@/types';
+import { toast } from 'sonner';
+
+interface Props {
+  entity?: Entity;
+}
+
+export function EntityForm({ entity }: Props) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [entityType, setEntityType] = useState<EntityType>(entity?.type ?? 'client');
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const input = {
+      name: formData.get('name') as string,
+      type: entityType,
+      aba_routing: (formData.get('aba_routing') as string) || undefined,
+      account_number: (formData.get('account_number') as string) || undefined,
+      bank_name: (formData.get('bank_name') as string) || undefined,
+      bank_address: (formData.get('bank_address') as string) || undefined,
+      primary_color: formData.get('primary_color') as string,
+      invoice_prefix: formData.get('invoice_prefix') as string,
+    };
+
+    startTransition(async () => {
+      const result = entity
+        ? await updateEntity(entity.id, input)
+        : await createEntity(input);
+
+      if (result?.error) {
+        toast.error(result.error);
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Entity Name *</Label>
+          <Input
+            id="name"
+            name="name"
+            defaultValue={entity?.name}
+            placeholder="Acme Corp"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Type *</Label>
+          <Select
+            value={entityType}
+            onValueChange={(v) => setEntityType(v as EntityType)}
+            name="type"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="client">Client</SelectItem>
+              <SelectItem value="provider">Provider</SelectItem>
+              <SelectItem value="both">Both</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="invoice_prefix">Invoice Prefix *</Label>
+        <Input
+          id="invoice_prefix"
+          name="invoice_prefix"
+          defaultValue={entity?.invoice_prefix}
+          placeholder="e.g. ACME"
+          maxLength={10}
+          required
+          disabled={!!entity}
+        />
+        <p className="text-xs text-muted-foreground">
+          {entity
+            ? 'Prefix cannot be changed after creation.'
+            : 'Invoices will be numbered as PREFIX-001, PREFIX-002, etc. Cannot be changed later.'}
+        </p>
+      </div>
+
+      <fieldset className="space-y-4 border rounded-lg p-4">
+        <legend className="text-sm font-medium px-2">Banking Information</legend>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="aba_routing">ABA Routing Number</Label>
+            <Input
+              id="aba_routing"
+              name="aba_routing"
+              defaultValue={entity?.aba_routing ?? ''}
+              maxLength={9}
+              placeholder="021000021"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="account_number">Account Number</Label>
+            <Input
+              id="account_number"
+              name="account_number"
+              defaultValue={entity?.account_number ?? ''}
+              placeholder="1234567890"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bank_name">Bank Name</Label>
+          <Input
+            id="bank_name"
+            name="bank_name"
+            defaultValue={entity?.bank_name ?? ''}
+            placeholder="Chase Bank"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bank_address">Bank Address</Label>
+          <Input
+            id="bank_address"
+            name="bank_address"
+            defaultValue={entity?.bank_address ?? ''}
+            placeholder="270 Park Ave, New York, NY 10017"
+          />
+        </div>
+      </fieldset>
+
+      <EntityColorPicker defaultValue={entity?.primary_color ?? '#1D4ED8'} />
+
+      <div className="flex gap-2">
+        <Button type="submit" disabled={isPending}>
+          {isPending ? 'Saving...' : entity ? 'Update Entity' : 'Create Entity'}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push('/entities')}
+        >
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
