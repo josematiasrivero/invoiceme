@@ -63,11 +63,13 @@ INSERT INTO auth.identities (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Sample entities
-INSERT INTO entities (name, type, aba_routing, account_number, bank_name, bank_address, primary_color, invoice_prefix)
+INSERT INTO entities (name, type, address, email, aba_routing, account_number, bank_name, bank_address, primary_color, invoice_prefix)
 VALUES
   (
     'Acme Corp',
     'client',
+    '270 Park Ave, New York, NY 10017',
+    'billing@acme.com',
     '021000021',
     '1234567890',
     'Chase Bank',
@@ -78,6 +80,8 @@ VALUES
   (
     'My Consulting LLC',
     'provider',
+    '100 N Tryon St, Charlotte, NC 28255',
+    'info@myconsulting.com',
     '021000089',
     '9876543210',
     'Bank of America',
@@ -88,6 +92,8 @@ VALUES
   (
     'Global Services Inc',
     'both',
+    '420 Montgomery St, San Francisco, CA 94104',
+    'billing@globalservices.com',
     '026009593',
     '5555444433',
     'Wells Fargo',

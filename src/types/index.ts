@@ -1,14 +1,19 @@
 export type EntityType = 'client' | 'provider' | 'both';
 
+export type InvoiceLayout = 'classic' | 'minimal' | 'sidebar' | 'compact';
+
 export interface Entity {
   id: string;
   name: string;
   type: EntityType;
+  address: string | null;
+  email: string | null;
   aba_routing: string | null;
   account_number: string | null;
   bank_name: string | null;
   bank_address: string | null;
   primary_color: string;
+  invoice_layout: InvoiceLayout;
   invoice_prefix: string;
   invoice_counter: number;
   created_at: string;
@@ -47,10 +52,13 @@ export interface CreateInvoiceInput {
 export interface CreateEntityInput {
   name: string;
   type: EntityType;
+  address?: string;
+  email?: string;
   aba_routing?: string;
   account_number?: string;
   bank_name?: string;
   bank_address?: string;
   primary_color: string;
+  invoice_layout?: InvoiceLayout;
   invoice_prefix: string;
 }

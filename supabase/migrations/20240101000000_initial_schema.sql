@@ -2,13 +2,11 @@
 -- InvoiceMe Initial Schema Migration
 -- ============================================================
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- ============================================================
 -- ENTITIES TABLE
 -- ============================================================
 CREATE TABLE entities (
-  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name             TEXT NOT NULL,
   type             TEXT NOT NULL CHECK (type IN ('client', 'provider', 'both')),
   aba_routing      TEXT,
@@ -31,7 +29,7 @@ CREATE INDEX idx_entities_type ON entities (type);
 -- INVOICES TABLE
 -- ============================================================
 CREATE TABLE invoices (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_number      TEXT NOT NULL,
   origin_id           UUID NOT NULL REFERENCES entities(id) ON DELETE RESTRICT,
   destination_id      UUID NOT NULL REFERENCES entities(id) ON DELETE RESTRICT,

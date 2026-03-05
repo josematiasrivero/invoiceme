@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EntityColorPicker } from './entity-color-picker';
-import type { Entity, EntityType } from '@/types';
+import { InvoiceLayoutPreviewButton } from '@/components/pdf/invoice-layout-preview-button';
+import type { Entity, EntityType, InvoiceLayout } from '@/types';
 import { toast } from 'sonner';
 
 interface Props {
@@ -25,6 +26,7 @@ export function EntityForm({ entity }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [entityType, setEntityType] = useState<EntityType>(entity?.type ?? 'client');
+  const [invoiceLayout, setInvoiceLayout] = useState<InvoiceLayout>(entity?.invoice_layout ?? 'classic');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,11 +35,14 @@ export function EntityForm({ entity }: Props) {
     const input = {
       name: formData.get('name') as string,
       type: entityType,
+      address: (formData.get('address') as string) || undefined,
+      email: (formData.get('email') as string) || undefined,
       aba_routing: (formData.get('aba_routing') as string) || undefined,
       account_number: (formData.get('account_number') as string) || undefined,
       bank_name: (formData.get('bank_name') as string) || undefined,
       bank_address: (formData.get('bank_address') as string) || undefined,
       primary_color: formData.get('primary_color') as string,
+      invoice_layout: invoiceLayout,
       invoice_prefix: formData.get('invoice_prefix') as string,
     };
 
@@ -103,7 +108,33 @@ export function EntityForm({ entity }: Props) {
       </div>
 
       <fieldset className="space-y-4 border rounded-lg p-4">
-        <legend className="text-sm font-medium px-2">Banking Information</legend>
+        <legend className="text-sm font-medium px-2">Address & Contact (Bill To)</legend>
+        <div className="space-y-2">
+          <Label htmlFor="address">Address</Label>
+          <Input
+            id="address"
+            name="address"
+            defaultValue={entity?.address ?? ''}
+            placeholder="123 Main St, City, State 12345"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={entity?.email ?? ''}
+            placeholder="billing@company.com"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Shown on invoices when this entity is the Bill To (client).
+        </p>
+      </fieldset>
+
+      <fieldset className="space-y-4 border rounded-lg p-4">
+        <legend className="text-sm font-medium px-2">Banking Information (From)</legend>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="aba_routing">ABA Routing Number</Label>
@@ -143,9 +174,34 @@ export function EntityForm({ entity }: Props) {
             placeholder="270 Park Ave, New York, NY 10017"
           />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Shown on invoices when this entity is the From (provider), for wire/ACH details.
+        </p>
       </fieldset>
 
       <EntityColorPicker defaultValue={entity?.primary_color ?? '#1D4ED8'} />
+
+      <div className="space-y-2">
+        <Label>Invoice Layout</Label>
+        <Select
+          value={invoiceLayout}
+          onValueChange={(v) => setInvoiceLayout(v as InvoiceLayout)}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="classic">Classic — Colored header, From/Bill To side by side</SelectItem>
+            <SelectItem value="minimal">Minimal — Clean lines, lots of whitespace</SelectItem>
+            <SelectItem value="sidebar">Sidebar — From in left column, content on right</SelectItem>
+            <SelectItem value="compact">Compact — Dense, smaller fonts</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Layout used when generating PDF invoices from this entity.
+        </p>
+        <InvoiceLayoutPreviewButton />
+      </div>
 
       <div className="flex gap-2">
         <Button type="submit" disabled={isPending}>
