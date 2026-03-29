@@ -3,6 +3,16 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 
 export async function POST(request: Request) {
+  const adminToken = process.env.ADMIN_TOKEN;
+  if (!adminToken) {
+    return NextResponse.json({ error: 'Registration is disabled' }, { status: 403 });
+  }
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${adminToken}`) {
+    return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
+  }
+
   const { email, password } = await request.json();
 
   if (!email || !password) {
