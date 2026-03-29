@@ -45,8 +45,8 @@ export function LoginForm({ prefillDev }: Props) {
               id="email"
               name="email"
               type="email"
-              placeholder="dev@local.com"
-              defaultValue={prefillDev ? 'dev@local.com' : ''}
+              placeholder="you@example.com"
+              defaultValue={prefillDev ? 'jose.matias.rivero@gmail.com' : ''}
               required
             />
           </div>
@@ -56,7 +56,7 @@ export function LoginForm({ prefillDev }: Props) {
               id="password"
               name="password"
               type="password"
-              defaultValue={prefillDev ? 'dev123456' : ''}
+              defaultValue={prefillDev ? 'w#Ah2OF5^!!salpb' : ''}
               required
             />
           </div>
