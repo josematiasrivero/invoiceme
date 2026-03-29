@@ -5,5 +5,5 @@ set -euo pipefail
 mkdir -p /mnt/data/apps/invoiceme/postgres
 
 # Build and start the environment
-docker compose up --build 
+docker compose up --build -d
 
