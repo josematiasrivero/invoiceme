@@ -21,8 +21,9 @@ export async function proxy(request: NextRequest) {
   }
 
   const isLoginPage = request.nextUrl.pathname === '/login';
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
 
-  if (!isAuthenticated && !isLoginPage) {
+  if (!isAuthenticated && !isLoginPage && !isApiRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
