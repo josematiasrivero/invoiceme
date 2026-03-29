@@ -9,7 +9,7 @@ services:
     volumes:
       - /mnt/data/apps/invoiceme/postgres:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "6014:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U invoiceme"]
       interval: 5s
