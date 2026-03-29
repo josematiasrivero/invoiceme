@@ -1,54 +1,40 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+
+const SECRET = new TextEncoder().encode(
+  process.env.AUTH_SECRET || 'invoiceme-dev-secret-change-in-production'
+);
+
+const COOKIE_NAME = 'invoiceme-session';
 
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  let isAuthenticated = false;
 
-  /** Publishable key (sb_publishable_...) or anon key fallback for local dev */
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    publishableKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+  if (token) {
+    try {
+      await jwtVerify(token, SECRET);
+      isAuthenticated = true;
+    } catch {
+      // invalid token
     }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  }
 
   const isLoginPage = request.nextUrl.pathname === '/login';
 
-  if (!user && !isLoginPage) {
+  if (!isAuthenticated && !isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  if (user && isLoginPage) {
+  if (isAuthenticated && isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {

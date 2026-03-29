@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/db';
 import { InvoiceList } from '@/components/invoices/invoice-list';
 import { InvoiceFilters } from '@/components/invoices/invoice-filters';
 import { BatchDownloadButton } from '@/components/invoices/invoice-actions';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { serializeEntity } from '@/lib/serialize';
 import type { Entity, Invoice } from '@/types';
 
 interface Props {
@@ -15,40 +16,41 @@ interface Props {
 export default async function DashboardPage({ searchParams }: Props) {
   const { origin_id, destination_id } = await searchParams;
 
-  const supabase = await createClient();
-
-  let query = supabase
-    .from('invoices')
-    .select(
-      `
-      *,
-      origin:entities!invoices_origin_id_fkey(*),
-      destination:entities!invoices_destination_id_fkey(*)
-    `
-    )
-    .order('date', { ascending: false })
-    .order('created_at', { ascending: false });
-
-  if (origin_id) {
-    query = query.eq('origin_id', origin_id);
-  }
-  if (destination_id) {
-    query = query.eq('destination_id', destination_id);
-  }
-
-  const [{ data: invoices }, { data: entities }] = await Promise.all([
-    query,
-    supabase.from('entities').select('*').order('name'),
+  const [rawInvoices, rawEntities] = await Promise.all([
+    prisma.invoice.findMany({
+      where: {
+        ...(origin_id && { originId: origin_id }),
+        ...(destination_id && { destinationId: destination_id }),
+      },
+      include: {
+        origin: true,
+        destination: true,
+      },
+      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+    }),
+    prisma.entity.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
-  const entitiesMap = Object.fromEntries(
-    ((entities ?? []) as Entity[]).map((e) => [e.id, e])
-  );
+  const entities: Entity[] = rawEntities.map(serializeEntity);
 
-  const totalAmount = (invoices ?? []).reduce(
-    (sum, inv) => sum + Number(inv.amount),
-    0
-  );
+  const invoices: Invoice[] = rawInvoices.map((inv) => ({
+    id: inv.id,
+    invoice_number: inv.invoiceNumber,
+    origin_id: inv.originId,
+    destination_id: inv.destinationId,
+    date: inv.date.toISOString().split('T')[0],
+    quantity: Number(inv.quantity),
+    unit_price: Number(inv.unitPrice),
+    amount: Number(inv.amount),
+    service_description: inv.serviceDescription,
+    created_at: inv.createdAt.toISOString(),
+    origin: serializeEntity(inv.origin),
+    destination: serializeEntity(inv.destination),
+  }));
+
+  const entitiesMap = Object.fromEntries(entities.map((e) => [e.id, e]));
+
+  const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
 
   return (
     <div className="space-y-6">
@@ -56,7 +58,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <div>
           <h1 className="text-2xl font-bold">Invoices</h1>
           <p className="text-muted-foreground text-sm">
-            {invoices?.length ?? 0} invoice{(invoices?.length ?? 0) !== 1 ? 's' : ''}
+            {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
             {totalAmount > 0 && (
               <> · Total:{' '}
                 <strong>
@@ -71,7 +73,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
         <div className="flex gap-2">
           <BatchDownloadButton
-            invoices={(invoices ?? []) as Invoice[]}
+            invoices={invoices}
             entities={entitiesMap}
           />
           <Button asChild>
@@ -85,16 +87,13 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       <Suspense>
         <InvoiceFilters
-          entities={(entities ?? []) as Entity[]}
+          entities={entities}
           originId={origin_id}
           destinationId={destination_id}
         />
       </Suspense>
 
-      <InvoiceList
-        invoices={(invoices ?? []) as Invoice[]}
-        entities={(entities ?? []) as Entity[]}
-      />
+      <InvoiceList invoices={invoices} entities={entities} />
     </div>
   );
 }

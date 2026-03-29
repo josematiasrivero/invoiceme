@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/db';
 import { EntityForm } from '@/components/entities/entity-form';
-import type { Entity } from '@/types';
+import { serializeEntity } from '@/lib/serialize';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -9,14 +9,11 @@ interface Props {
 
 export default async function EditEntityPage({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: entity } = await supabase
-    .from('entities')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const rawEntity = await prisma.entity.findUnique({ where: { id } });
 
-  if (!entity) notFound();
+  if (!rawEntity) notFound();
+
+  const entity = serializeEntity(rawEntity);
 
   return (
     <div className="space-y-6">
@@ -26,7 +23,7 @@ export default async function EditEntityPage({ params }: Props) {
           Update details for <strong>{entity.name}</strong>.
         </p>
       </div>
-      <EntityForm entity={entity as Entity} />
+      <EntityForm entity={entity} />
     </div>
   );
 }

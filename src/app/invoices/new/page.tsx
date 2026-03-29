@@ -1,13 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/db';
 import { InvoiceForm } from '@/components/invoices/invoice-form';
-import type { Entity } from '@/types';
+import { serializeEntity } from '@/lib/serialize';
 
 export default async function NewInvoicePage() {
-  const supabase = await createClient();
-  const { data: entities } = await supabase
-    .from('entities')
-    .select('*')
-    .order('name');
+  const rawEntities = await prisma.entity.findMany({ orderBy: { name: 'asc' } });
+  const entities = rawEntities.map(serializeEntity);
 
   return (
     <div className="space-y-6">
@@ -17,7 +14,7 @@ export default async function NewInvoicePage() {
           Create an invoice between two entities in the system.
         </p>
       </div>
-      <InvoiceForm entities={(entities ?? []) as Entity[]} />
+      <InvoiceForm entities={entities} />
     </div>
   );
 }

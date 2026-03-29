@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/db';
 import { InvoiceForm } from '@/components/invoices/invoice-form';
-import type { Entity, Invoice } from '@/types';
+import { serializeEntity, serializeInvoice } from '@/lib/serialize';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -9,21 +9,16 @@ interface Props {
 
 export default async function EditInvoicePage({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
 
-  const [{ data: invoice }, { data: entities }] = await Promise.all([
-    supabase
-      .from('invoices')
-      .select('*')
-      .eq('id', id)
-      .single(),
-    supabase
-      .from('entities')
-      .select('*')
-      .order('name'),
+  const [rawInvoice, rawEntities] = await Promise.all([
+    prisma.invoice.findUnique({ where: { id } }),
+    prisma.entity.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
-  if (!invoice) notFound();
+  if (!rawInvoice) notFound();
+
+  const invoice = serializeInvoice(rawInvoice);
+  const entities = rawEntities.map(serializeEntity);
 
   return (
     <div className="space-y-6">
@@ -33,10 +28,7 @@ export default async function EditInvoicePage({ params }: Props) {
           Editing <span className="font-mono font-semibold">{invoice.invoice_number}</span>
         </p>
       </div>
-      <InvoiceForm
-        invoice={invoice as Invoice}
-        entities={(entities ?? []) as Entity[]}
-      />
+      <InvoiceForm invoice={invoice} entities={entities} />
     </div>
   );
 }

@@ -1,16 +1,13 @@
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/db';
 import { EntityList } from '@/components/entities/entity-list';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import type { Entity } from '@/types';
+import { serializeEntity } from '@/lib/serialize';
 
 export default async function EntitiesPage() {
-  const supabase = await createClient();
-  const { data: entities } = await supabase
-    .from('entities')
-    .select('*')
-    .order('name');
+  const rawEntities = await prisma.entity.findMany({ orderBy: { name: 'asc' } });
+  const entities = rawEntities.map(serializeEntity);
 
   return (
     <div className="space-y-6">
@@ -29,7 +26,7 @@ export default async function EntitiesPage() {
         </Button>
       </div>
 
-      <EntityList entities={(entities ?? []) as Entity[]} />
+      <EntityList entities={entities} />
     </div>
   );
 }
