@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InvoiceMe
 
-## Getting Started
+Simple invoicing app for managing clients, providers, and invoices with PDF generation.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Server Actions)
+- **Prisma** (PostgreSQL)
+- **JWT cookie auth** (jose + bcryptjs)
+- **Docker Compose** (app, postgres, pgweb)
+
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+./run.sh
 ```
 
-Open [http://localhost:3010](http://localhost:3010) with your browser to see the result.
+This will:
+1. Create the postgres data directory at `/mnt/data/apps/invoiceme/postgres`
+2. Build and start all services via Docker Compose
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Services
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Service  | URL                      |
+|----------|--------------------------|
+| App      | http://localhost:6000     |
+| pgweb    | http://localhost:6011     |
+| Postgres | localhost:6014            |
 
-## Learn More
+## Configuration
 
-To learn more about Next.js, take a look at the following resources:
+Copy `.env.example` and set your values:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cp .env.example .env
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable       | Description                                      |
+|----------------|--------------------------------------------------|
+| `DATABASE_URL` | PostgreSQL connection string                     |
+| `AUTH_SECRET`  | Secret key for signing JWT session cookies       |
+| `ADMIN_TOKEN`  | Bearer token required for the registration route |
 
-## Deploy on Vercel
+## Creating a User
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Registration is protected by the `ADMIN_TOKEN` env var. With the services running:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+curl -X POST http://localhost:6000/api/register \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <your-admin-token>' \
+  -d '{"email":"you@example.com","password":"<your-password>"}'
+```
+
+Then sign in at http://localhost:6000/login.
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate deploy
+
+# Start dev server (port 3010)
+npm run dev
+```
+
+## Docker Compose Services
+
+```yaml
+postgres   # PostgreSQL 17 — data persisted to /mnt/data/apps/invoiceme/postgres
+pgweb      # Web-based Postgres UI
+app        # Next.js standalone build, runs migrations on startup
+```
+
+### Useful Commands
+
+```bash
+# View logs
+docker compose logs -f
+
+# Run migrations manually
+docker compose exec app npx prisma migrate deploy
+
+# Stop everything
+docker compose down
+```
