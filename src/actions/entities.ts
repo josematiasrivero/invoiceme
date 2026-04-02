@@ -17,6 +17,7 @@ export async function createEntity(input: CreateEntityInput) {
         accountNumber: input.account_number,
         bankName: input.bank_name,
         bankAddress: input.bank_address,
+        defaultServiceDescription: input.default_service_description,
       },
     });
   } catch (e: unknown) {
@@ -41,6 +42,7 @@ export async function updateEntity(id: string, input: Partial<CreateEntityInput>
         ...(input.account_number !== undefined && { accountNumber: input.account_number }),
         ...(input.bank_name !== undefined && { bankName: input.bank_name }),
         ...(input.bank_address !== undefined && { bankAddress: input.bank_address }),
+        ...(input.default_service_description !== undefined && { defaultServiceDescription: input.default_service_description }),
         ...(input.primary_color !== undefined && { primaryColor: input.primary_color }),
         ...(input.invoice_layout !== undefined && { invoiceLayout: input.invoice_layout }),
         ...(input.invoice_prefix !== undefined && { invoicePrefix: input.invoice_prefix.toUpperCase() }),

@@ -10,6 +10,7 @@ export function serializeEntity(e: {
   accountNumber: string | null;
   bankName: string | null;
   bankAddress: string | null;
+  defaultServiceDescription: string | null;
   primaryColor: string;
   invoiceLayout: string;
   invoicePrefix: string;
@@ -26,6 +27,7 @@ export function serializeEntity(e: {
     account_number: e.accountNumber,
     bank_name: e.bankName,
     bank_address: e.bankAddress,
+    default_service_description: e.defaultServiceDescription,
     primary_color: e.primaryColor,
     invoice_layout: e.invoiceLayout as Entity['invoice_layout'],
     invoice_prefix: e.invoicePrefix,

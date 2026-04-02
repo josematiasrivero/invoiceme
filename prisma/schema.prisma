@@ -30,6 +30,7 @@ model Entity {
   primaryColor   String   @default("#1D4ED8") @map("primary_color")
   invoiceLayout  String   @default("classic") @map("invoice_layout")
   invoicePrefix  String   @unique @map("invoice_prefix")
+  defaultServiceDescription String? @map("default_service_description")
   invoiceCounter Int      @default(0) @map("invoice_counter")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 

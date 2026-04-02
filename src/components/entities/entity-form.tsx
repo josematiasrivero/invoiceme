@@ -41,6 +41,7 @@ export function EntityForm({ entity }: Props) {
       account_number: (formData.get('account_number') as string) || undefined,
       bank_name: (formData.get('bank_name') as string) || undefined,
       bank_address: (formData.get('bank_address') as string) || undefined,
+      default_service_description: (formData.get('default_service_description') as string) || undefined,
       primary_color: formData.get('primary_color') as string,
       invoice_layout: invoiceLayout,
       invoice_prefix: formData.get('invoice_prefix') as string,
@@ -178,6 +179,19 @@ export function EntityForm({ entity }: Props) {
           Shown on invoices when this entity is the From (provider), for wire/ACH details.
         </p>
       </fieldset>
+
+      <div className="space-y-2">
+        <Label htmlFor="default_service_description">Default Service Description</Label>
+        <Input
+          id="default_service_description"
+          name="default_service_description"
+          defaultValue={entity?.default_service_description ?? ''}
+          placeholder="e.g. Software development services"
+        />
+        <p className="text-xs text-muted-foreground">
+          Auto-filled when creating invoices from this entity. Can be changed per invoice.
+        </p>
+      </div>
 
       <EntityColorPicker defaultValue={entity?.primary_color ?? '#1D4ED8'} />
 

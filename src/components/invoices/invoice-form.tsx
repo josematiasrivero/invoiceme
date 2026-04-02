@@ -29,6 +29,17 @@ export function InvoiceForm({ entities, invoice }: Props) {
   const [destinationId, setDestinationId] = useState(invoice?.destination_id ?? '');
   const [quantity, setQuantity] = useState<string>(invoice?.quantity?.toString() ?? '1');
   const [unitPrice, setUnitPrice] = useState<string>(invoice?.unit_price?.toString() ?? '');
+  const [serviceDescription, setServiceDescription] = useState(invoice?.service_description ?? '');
+
+  function handleOriginChange(id: string) {
+    setOriginId(id);
+    if (!isEdit) {
+      const entity = entities.find((e) => e.id === id);
+      if (entity?.default_service_description && !serviceDescription) {
+        setServiceDescription(entity.default_service_description);
+      }
+    }
+  }
 
   const isEdit = !!invoice;
   const today = new Date().toISOString().split('T')[0];
@@ -66,7 +77,7 @@ export function InvoiceForm({ entities, invoice }: Props) {
       quantity: qty,
       unit_price: price,
       amount: total,
-      service_description: formData.get('service_description') as string,
+      service_description: serviceDescription,
     };
 
     startTransition(async () => {
@@ -111,7 +122,7 @@ export function InvoiceForm({ entities, invoice }: Props) {
             </div>
           ) : (
             <>
-              <Select value={originId} onValueChange={setOriginId} required>
+              <Select value={originId} onValueChange={handleOriginChange} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select origin..." />
                 </SelectTrigger>
@@ -204,7 +215,8 @@ export function InvoiceForm({ entities, invoice }: Props) {
           id="service_description"
           name="service_description"
           placeholder="e.g. Web development services for Q1 2025"
-          defaultValue={invoice?.service_description}
+          value={serviceDescription}
+          onChange={(e) => setServiceDescription(e.target.value)}
           required
         />
       </div>

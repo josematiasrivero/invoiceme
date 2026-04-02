@@ -14,6 +14,7 @@ export interface Entity {
   bank_address: string | null;
   primary_color: string;
   invoice_layout: InvoiceLayout;
+  default_service_description: string | null;
   invoice_prefix: string;
   invoice_counter: number;
   created_at: string;
@@ -59,6 +60,7 @@ export interface CreateEntityInput {
   bank_name?: string;
   bank_address?: string;
   primary_color: string;
+  default_service_description?: string;
   invoice_layout?: InvoiceLayout;
   invoice_prefix: string;
 }
