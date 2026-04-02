@@ -180,6 +180,44 @@ docker compose logs -f app      # View app logs
 - The seed script may create a dev admin user for local development only.
 - The server `docker-compose.server.yml` must set `NODE_ENV=production` on the `migrate-seed` service so seeds are skipped.
 
+## Database Reset Script
+
+Every project must include a `db-reset.sh` script at the root that drops and recreates the database inside the running Docker Compose stack (works with both `docker-compose.local.yml` and `docker-compose.server.yml`).
+
+**This script is destructive — always ask the user for explicit confirmation before running it.**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Detect which compose file is active
+if docker compose -f docker-compose.server.yml ps --quiet 2>/dev/null | head -1 | grep -q .; then
+  COMPOSE_FILE="docker-compose.server.yml"
+elif docker compose -f docker-compose.local.yml ps --quiet 2>/dev/null | head -1 | grep -q .; then
+  COMPOSE_FILE="docker-compose.local.yml"
+else
+  echo "No running docker-compose stack found." && exit 1
+fi
+
+echo "Using $COMPOSE_FILE"
+echo "This will DROP and recreate the database. All data will be lost."
+read -rp "Are you sure? (yes/no): " CONFIRM
+[[ "$CONFIRM" == "yes" ]] || { echo "Aborted."; exit 0; }
+
+DB_SERVICE="postgres"
+DB_NAME="${DB_NAME:-app}"
+
+docker compose -f "$COMPOSE_FILE" exec "$DB_SERVICE" \
+  psql -U postgres -c "DROP DATABASE IF EXISTS \"$DB_NAME\";"
+docker compose -f "$COMPOSE_FILE" exec "$DB_SERVICE" \
+  psql -U postgres -c "CREATE DATABASE \"$DB_NAME\";"
+
+echo "Database '$DB_NAME' has been reset."
+echo "Restart the app or run 'npx prisma migrate deploy && npx tsx prisma/seed.ts' to re-apply migrations and seed."
+```
+
+Adjust `DB_NAME` to match the project's database name (or set it via env var).
+
 ## Adding New Features — Checklist
 
 1. **New model**: Add to `prisma/schema.prisma`, run `npx prisma migrate dev --name <name>`.
