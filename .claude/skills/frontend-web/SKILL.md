@@ -165,6 +165,7 @@ export function useProducts() {
 **Base client** (`api/apiClient.ts`):
 - `apiFetch<T>(path, options)` — generic typed fetch wrapper.
 - Automatically injects `Authorization: Bearer <token>` from localStorage.
+- **401 auto-redirect**: When any API call returns HTTP 401, the client must clear the stored user data from localStorage and redirect to `/login` using `window.location.href` (hard navigation, not `router.push`). This ensures expired or invalid tokens never leave the user on a broken page.
 - API base configurable via `NEXT_PUBLIC_BACKEND_URL` or Next.js rewrites.
 
 **Service modules** (`api/*Api.ts`):
