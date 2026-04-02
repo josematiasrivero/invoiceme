@@ -45,7 +45,7 @@ export async function updateEntity(id: string, input: Partial<CreateEntityInput>
         ...(input.default_service_description !== undefined && { defaultServiceDescription: input.default_service_description }),
         ...(input.primary_color !== undefined && { primaryColor: input.primary_color }),
         ...(input.invoice_layout !== undefined && { invoiceLayout: input.invoice_layout }),
-        ...(input.invoice_prefix !== undefined && { invoicePrefix: input.invoice_prefix.toUpperCase() }),
+        ...(input.invoice_prefix != null && { invoicePrefix: input.invoice_prefix.toUpperCase() }),
       },
     });
   } catch (e: unknown) {
