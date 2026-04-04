@@ -280,6 +280,7 @@ All UIs **must** be fully usable on mobile viewports (320px+). Apply these rules
 - **Spacing**: Use tighter padding on mobile (`p-3` / `gap-3`) and wider on desktop (`md:p-6` / `md:gap-6`).
 - **Font sizes**: Base text `text-sm` on mobile, `md:text-base` on desktop. Headings scale similarly.
 - **Modals/Dialogs**: On mobile, prefer full-screen sheets (`Sheet` with `side="bottom"`) over centered dialogs to maximize usable space.
+- **Disable pinch-to-zoom**: Mobile web apps must feel native. Set `viewport` metadata to prevent user zooming: `{ width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false }`. In Next.js, export a `viewport` object from the root layout (not inside the `metadata` export).
 - **Test mentally**: Before finishing any component, consider how it renders at 375px wide. If any content overflows or becomes unreadable, fix it.
 
 ```typescript
